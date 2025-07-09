@@ -20,7 +20,7 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(255), unique=True, nullable=False)
     username = db.Column(db.String(255), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
-    pin_code = db.Column(db.String(100), nullable=False)
+    pincode = db.Column(db.String(100), nullable=False)
     fs_uniquifier = db.Column(db.String(255), unique=True, nullable=False)
     active = db.Column(db.Boolean, nullable=False, default=True)
 
@@ -33,7 +33,7 @@ class ParkingLot(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     prime_location_name = db.Column(db.String(255), nullable=False)
     address = db.Column(db.Text, nullable=False)
-    pin_code = db.Column(db.String(100), nullable=False)
+    pincode = db.Column(db.String(100), nullable=False)
     price_per_hour = db.Column(db.Float, nullable=False)
     maximum_number_of_spots = db.Column(db.Integer, nullable=False)
 

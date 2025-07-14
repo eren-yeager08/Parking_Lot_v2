@@ -79,35 +79,57 @@ def create_user():
     }), 400 
 
 
-@app.route('/api/lots', methods=['POST'])
-@auth_required('token')
-@roles_required('admin')  # or 'user' if users can also add lots
-def add_parking_lot():
-    data = request.get_json()
+# @app.route('/api/lots', methods=['POST'])
+# @auth_required('token')
+# @roles_required('admin')
+# def add_parking_lot():
+#     data = request.get_json()
 
-    try:
-        lot = ParkingLot(
-            prime_location_name=data['prime_location_name'],
-            address=data['address'],
-            pincode=data['pincode'],
-            price_per_hour=float(data['price_per_hour']),
-            maximum_number_of_spots=int(data['maximum_number_of_spots'])
-        )
-        db.session.add(lot)
-        db.session.commit()  # Save to get lot.id
+#     lot = ParkingLot(
+#         prime_location_name=data['prime_location_name'],
+#         address=data['address'],
+#         pincode=data['pincode'],
+#         price_per_hour=float(data['price_per_hour']),
+#         maximum_number_of_spots=int(data['maximum_number_of_spots'])
+#     )
+#     db.session.add(lot)
+#     db.session.commit()  # commit to get lot.id
 
-        # Create empty parking spots (default status = 'A')
-        for _ in range(lot.maximum_number_of_spots):
-            spot = ParkingSpot(lot_id=lot.id, status='A')
-            db.session.add(spot)
+#     # Create parking spots
+#     for _ in range(lot.maximum_number_of_spots):
+#         spot = ParkingSpot(lot_id=lot.id, status='A')
+#         db.session.add(spot)
 
-        db.session.commit()
+#     db.session.commit()
 
-        return jsonify({
-            "message": "Parking lot created successfully",
-            "lot_id": lot.id
-        }), 201
+#     return jsonify({
+#         "message": "Parking lot created successfully",
+#         "lot_id": lot.id
+#     }), 201
 
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+        
+          
+
+# @app.route('/api/lots', methods=['GET'])
+# @auth_required('token')
+# def get_parking_lots():
+#     lots = ParkingLot.query.all()
+#     response = []
+#     for lot in lots:
+#         response.append({
+#             "id": lot.id,
+#             "prime_location_name": lot.prime_location_name,
+#             "address": lot.address,
+#             "pincode": lot.pincode,
+#             "price_per_hour": lot.price_per_hour,
+#             "maximum_number_of_spots": lot.maximum_number_of_spots,
+#             "spots": [
+#                 {
+#                     "id": spot.id,
+#                     "status": spot.status
+#                 }
+#                 for spot in lot.spots
+#             ]
+#         })
+
+#     return jsonify(response)

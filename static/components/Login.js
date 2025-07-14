@@ -50,12 +50,12 @@ export default {
                     if(data.roles.includes('admin')){
                         this.$router.push('/admin_dash')
                     }else{
-                        this.$router.push('/dashboard')
+                        this.$router.push('/user_dash')
                     }
                 }
-                else{
-                    this.message = data.message
-                }             
+                // else{
+                //     this.message = data.message
+                // }             
             })               
         }
     }

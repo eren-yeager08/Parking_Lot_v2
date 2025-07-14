@@ -4,6 +4,8 @@ from flask_security import auth_required, roles_required, roles_accepted, curren
 from datetime import datetime
 from .database import db
 from .utily import roles_list
+from sqlalchemy import func
+
 
 
 
@@ -219,3 +221,122 @@ class UserListAPI(Resource):
 
 # register once, alongside your other resources
 api.add_resource(UserListAPI, "/api/users")
+
+#################################################################
+
+class AdminSummaryAPI(Resource):
+    @auth_required('token')
+    @roles_required('admin')
+    def get(self):
+        total_users = User.query.filter(User.roles.any(name='user')).count()
+        total_lots = ParkingLot.query.count()
+        total_spots = ParkingSpot.query.all()
+
+        available = sum(1 for s in total_spots if s.status == 'A')
+        occupied = sum(1 for s in total_spots if s.status == 'O')
+
+        # Per-lot available and occupied counts
+        lots = ParkingLot.query.all()
+        lots_data = []
+        for lot in lots:
+            spots = lot.spots  # Assuming relationship: ParkingLot.spots
+            available_count = sum(1 for s in spots if s.status == 'A')
+            occupied_count = sum(1 for s in spots if s.status == 'O')
+            lots_data.append({
+                "id": lot.id,
+                "name": lot.prime_location_name,
+                "available": available_count,
+                "occupied": occupied_count
+            })
+
+        return {
+            "user_count": total_users,
+            "lot_count": total_lots,
+            "available_count": available,
+            "occupied_count": occupied,
+            "lots": lots_data
+        }, 200
+
+api.add_resource(AdminSummaryAPI, "/api/admin_summary")
+
+########################################################################
+
+class MyReservationAPI(Resource):
+    @auth_required('token')
+    def get(self):
+        history = []
+        for r in current_user.reservations:
+            lot = r.spot.lot          # via relationships
+            history.append({
+                "id": r.id,
+                "lot_id": lot.id,
+                "address": lot.address,
+                "vehicle_number": r.vehicle_number,
+                "parking_time": r.parking_time.isoformat(),
+                "leaving_time": r.leaving_time.isoformat() if r.leaving_time else None,
+                "total_cost": calc_total(r)
+            })
+        return history, 200
+
+
+def calc_total(r):
+    if not r.leaving_time:
+        return None
+    hrs = (r.leaving_time - r.parking_time).total_seconds() / 3600
+    return round(hrs * r.cost_per_hour, 2)
+
+api.add_resource(MyReservationAPI, "/api/my_reservations")
+
+###############################################################################
+
+class ReservationAPI(Resource):
+    @auth_required('token')
+    def post(self):
+        data = request.get_json()
+        lot_id = data['lot_id']
+        spot_id = data['spot_id']
+        vehicle = data['vehicle_number']
+
+        spot = ParkingSpot.query.get(spot_id)
+        if not spot or spot.status != 'A':
+            return {"message": "Invalid or unavailable spot"}, 400
+
+        # Mark spot as occupied
+        spot.status = 'O'
+
+        # Create reservation
+        r = Reservation(
+            user_id=current_user.id,
+            spot_id=spot.id,
+            vehicle_number=vehicle,
+            parking_time=datetime.now(),
+            cost_per_hour=spot.lot.price_per_hour
+        )
+        db.session.add(r)
+        db.session.commit()
+
+        return {"message": "Reservation successful"}, 201
+    
+
+    @auth_required('token')
+    def delete(self, reservation_id):
+        resv = Reservation.query.get_or_404(reservation_id)
+
+        # Make sure current user owns this reservation (or admin check)
+        if resv.user_id != current_user.id:
+            return {"message": "Unauthorized"}, 403
+
+        # Mark leaving time = now, update spot status to 'A'
+        from datetime import datetime
+        resv.leaving_time = datetime.utcnow()
+        resv.spot.status = 'A'
+
+        db.session.commit()
+
+        return {"message": "Reservation released"}, 200
+    
+api.add_resource(ReservationAPI, "/api/reservations", "/api/reservations/<int:reservation_id>")
+
+#######################################################################################
+
+

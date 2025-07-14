@@ -27,14 +27,14 @@ export default {
             <router-link class="nav-link" to="/user_details">User Details</router-link>
           </li>
           <li class="nav-item">
-            <router-link class="nav-link" to="/summary">Summary</router-link>
+            <router-link class="nav-link" to="/admin_summary">Summary</router-link>
           </li>
         </template>
 
         <!-- normal user link -->
         <template v-else>
           <li class="nav-item">
-            <router-link class="nav-link" to="/home">Home</router-link>
+            <router-link class="nav-link" to="/user_dash">Home</router-link>
           </li>
           <li class="nav-item">
             <router-link class="nav-link" to="/user_summary">Summary</router-link>
@@ -78,21 +78,34 @@ export default {
   methods: {
     /** read token → set loggedIn flag → fetch user if needed */
     async syncAuthState() {
-      this.loggedIn = !!localStorage.getItem('auth_token');
+    const token = localStorage.getItem('auth_token');
 
-      if (this.loggedIn && !this.user) {
-        try {
-          const res   = await fetch('/api/me', {
-            headers: { 'Authentication-Token': localStorage.getItem('auth_token') }
-          });
-          if (res.ok) this.user = await res.json();
-        } catch (e) {
-          console.error(e);
-        }
+    if (!token) {
+      this.loggedIn = false;
+      this.user = null;
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/me', {
+        headers: { 'Authentication-Token': token }
+      });
+
+      if (res.ok) {
+        this.user = await res.json();
+        this.loggedIn = true;
+      } else {
+        // token invalid or expired
+        localStorage.removeItem('auth_token');
+        this.loggedIn = false;
+        this.user = null;
       }
-
-      if (!this.loggedIn) this.user = null;
-    },
+    } catch (e) {
+      console.error('Auth check failed:', e);
+      this.loggedIn = false;
+      this.user = null;
+    }
+  },
 
     logout() {
       localStorage.removeItem('auth_token');

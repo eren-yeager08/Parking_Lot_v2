@@ -9,6 +9,7 @@ import Edit_lot from './components/Edit_lot.js'
 import User_details from './components/User_details.js'
 import Admin_summary from './components/Admin_summary.js'
 import User_dash from './components/User_dash.js'
+import User_summary from './components/User_summary.js'
 
 
 
@@ -25,6 +26,8 @@ const routes = [
     {path: '/user_details', component: User_details},
     {path: '/admin_summary', component: Admin_summary},
     {path: '/user_dash', component: User_dash},
+    {path: '/user_summary', component: User_summary},
+
 
 
 

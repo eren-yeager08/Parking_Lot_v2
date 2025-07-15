@@ -1,7 +1,7 @@
 from flask_restful import Resource, reqparse, Api, request
 from .models import *
 from flask_security import auth_required, roles_required, roles_accepted, current_user
-from datetime import datetime
+from datetime import datetime ,timezone, timedelta
 from .database import db
 from .utily import roles_list
 from sqlalchemy import func
@@ -141,6 +141,9 @@ class ParkingLotAPI(Resource):
             return {"message": "Parking lot not found"}, 404
 
         # Ensure no occupied spots
+
+        if any(spot.status == 'O' for spot in lot.spots):
+            return {"message": "Cannot delete — one or more spots are occupied"}, 400
         occupied_spots = [spot for spot in lot.spots if spot.status != 'A']
         if occupied_spots:
             return {"message": "Cannot delete lot: some spots are still occupied"}, 400
@@ -224,6 +227,10 @@ api.add_resource(UserListAPI, "/api/users")
 
 #################################################################
 
+def _hours_between(start, end):
+    seconds = (end - start).total_seconds()
+    return max(seconds / 3600, 0) 
+
 class AdminSummaryAPI(Resource):
     @auth_required('token')
     @roles_required('admin')
@@ -235,25 +242,40 @@ class AdminSummaryAPI(Resource):
         available = sum(1 for s in total_spots if s.status == 'A')
         occupied = sum(1 for s in total_spots if s.status == 'O')
 
-        # Per-lot available and occupied counts
+        # Per-lot available and occupied counts + revenue
         lots = ParkingLot.query.all()
         lots_data = []
         for lot in lots:
-            spots = lot.spots  # Assuming relationship: ParkingLot.spots
+            spots = lot.spots
             available_count = sum(1 for s in spots if s.status == 'A')
             occupied_count = sum(1 for s in spots if s.status == 'O')
+
+            # Get all reservations in this lot
+            reservations = Reservation.query.join(ParkingSpot).filter(
+                ParkingSpot.lot_id == lot.id,
+                Reservation.leaving_time.isnot(None)
+            ).all()
+            lot_revenue = 0
+            for r in reservations:
+                hrs = _hours_between(r.parking_time, r.leaving_time)
+                lot_revenue += hrs * r.cost_per_hour
+
             lots_data.append({
                 "id": lot.id,
                 "name": lot.prime_location_name,
                 "available": available_count,
-                "occupied": occupied_count
+                "occupied": occupied_count,
+                "revenue": round(lot_revenue, 2)
             })
+
+        total_revenue = round(sum(lot["revenue"] for lot in lots_data), 2)
 
         return {
             "user_count": total_users,
             "lot_count": total_lots,
             "available_count": available,
             "occupied_count": occupied,
+            "total_revenue": total_revenue,
             "lots": lots_data
         }, 200
 
@@ -266,10 +288,11 @@ class MyReservationAPI(Resource):
     def get(self):
         history = []
         for r in current_user.reservations:
-            lot = r.spot.lot          # via relationships
+            lot = r.spot.lot
             history.append({
                 "id": r.id,
                 "lot_id": lot.id,
+                "spot_id": r.spot.id,                            # ✅ Add this line
                 "address": lot.address,
                 "vehicle_number": r.vehicle_number,
                 "parking_time": r.parking_time.isoformat(),
@@ -278,12 +301,13 @@ class MyReservationAPI(Resource):
             })
         return history, 200
 
-
 def calc_total(r):
-    if not r.leaving_time:
-        return None
-    hrs = (r.leaving_time - r.parking_time).total_seconds() / 3600
-    return round(hrs * r.cost_per_hour, 2)
+    from datetime import datetime
+    end_time = r.leaving_time or datetime.utcnow()
+    hours = (end_time - r.parking_time).total_seconds() / 3600
+    hours = max(hours, 1)  # Minimum 1 hour charge
+    return round(hours * r.cost_per_hour, 2)
+
 
 api.add_resource(MyReservationAPI, "/api/my_reservations")
 
@@ -318,25 +342,71 @@ class ReservationAPI(Resource):
         return {"message": "Reservation successful"}, 201
     
 
+    # from datetime import datetime
+
+
+    
     @auth_required('token')
     def delete(self, reservation_id):
         resv = Reservation.query.get_or_404(reservation_id)
+        IST = timezone(timedelta(hours=5, minutes=30))
 
-        # Make sure current user owns this reservation (or admin check)
         if resv.user_id != current_user.id:
             return {"message": "Unauthorized"}, 403
 
-        # Mark leaving time = now, update spot status to 'A'
-        from datetime import datetime
-        resv.leaving_time = datetime.utcnow()
+        resv.leaving_time = datetime.now(IST)  # Use IST timezone here
         resv.spot.status = 'A'
 
         db.session.commit()
-
         return {"message": "Reservation released"}, 200
+
     
 api.add_resource(ReservationAPI, "/api/reservations", "/api/reservations/<int:reservation_id>")
 
 #######################################################################################
+
+class UserSummaryAPI(Resource):
+    @auth_required('token')
+    def get(self):
+        from collections import Counter
+        usage = Counter()
+        for r in current_user.reservations:
+            lot = r.spot.lot
+            usage[lot.address] += 1
+
+        summary = {
+            "labels": list(usage.keys()),
+            "data": list(usage.values())
+        }
+        return summary, 200
+
+api.add_resource(UserSummaryAPI, "/api/user_summary")
+
+###########################################################################################
+class SpotInfoAPI(Resource):
+    @auth_required('token')
+    def get(self, spot_id):
+        spot = ParkingSpot.query.get_or_404(spot_id)
+
+        # Get current active reservation
+        reservation = Reservation.query.filter_by(spot_id=spot.id, leaving_time=None).first()
+        if not reservation:
+            return {"message": "No active reservation found"}, 404
+
+        duration = datetime.utcnow() - reservation.parking_time
+        hours = max(duration.total_seconds() / 3600, 1)
+        est_cost = round(hours * reservation.cost_per_hour, 2)
+
+        return {
+            "id": reservation.id,
+            "user_id": reservation.user_id,
+            "vehicle_number": reservation.vehicle_number,
+            "parking_time": reservation.parking_time.isoformat(),
+            "estimated_cost": est_cost
+        }, 200
+
+api.add_resource(SpotInfoAPI, "/api/spot_info/<int:spot_id>")
+
+
 
 

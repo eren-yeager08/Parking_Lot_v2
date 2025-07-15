@@ -3,90 +3,100 @@ export default {
   <div class="container mt-4">
     <h2 class="mb-4">Parking Lots</h2>
 
-    <!-- flash alert -->
-    <div v-if="flashMessage"
-         class="alert alert-success alert-dismissible fade show"
-         role="alert">
-      {{ flashMessage }}
-      <button type="button" class="btn-close" @click="flashMessage = null"></button>
+    <!-- flash -->
+    <div v-if="flash" :class="flashClass" class="alert alert-dismissible fade show" role="alert">
+      {{ flash }}
+      <button class="btn-close" @click="flash = null"></button>
     </div>
 
-    <!-- ====== LOT CARDS ====== -->
-    <div v-if="lots && lots.length">
-      <div class="row">
-        <div class="col-md-4 mb-3" v-for="(lot, index) in lots" :key="lot.id">
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title">Parking #{{ index + 1 }}</h5>
-              <h6><span>{{ lot.prime_location_name }}</span></h6>
+    <!-- PARKING LOT CARDS -->
+    <div v-if="lots.length" class="row">
+      <div class="col-md-4 mb-3" v-for="(lot, idx) in lots" :key="lot.id">
+        <div class="card h-100">
+          <div class="card-body">
+            <h5 class="card-title">Parking #{{ idx + 1 }}</h5>
+            <h6>{{ lot.prime_location_name }}</h6>
+            <p>Occupied: {{ lot.occupied_count }} / {{ lot.total_spots }}</p>
 
-              <p>
-                Occupied: {{ lot.occupied_count }} /
-                {{ lot.total_spots }}
-              </p>
-
-              <!-- spot buttons -->
-              <div v-if="lot.spots && lot.spots.length"
-                   class="row row-cols-auto g-2 mt-2">
+            <!-- spots -->
+            <div class="row row-cols-auto g-2 mt-2">
+              <div class="row row-cols-auto g-2">
                 <button
                   v-for="spot in lot.spots"
                   :key="spot.id"
+                  v-if="spot.status === 'A'"
+                  class="btn btn-sm btn-success fw-bold px-2 py-1 m-1"
                   @click="handleSpotClick(spot)"
-                  class="btn btn-sm fw-bold px-2 py-1 m-1"
-                  :class="spot.status === 'A' ? 'btn-success' : 'btn-danger'"
-                  :title="spot.status === 'A' ? 'Available' : 'Occupied'">
-                  {{ spot.status }}
+                  title="Available"
+                >
+                  A
                 </button>
-              </div>
 
-              <!-- lot actions -->
-              <div class="mt-3">
-                <button @click="editLot(lot.id)"
-                        class="btn btn-secondary btn-sm">Edit</button>
-                <button @click="deleteLot(lot.id)"
-                        class="btn btn-danger btn-sm">Delete</button>
+                <span
+                  v-else
+                  :key="spot.id"
+                  class="btn btn-sm btn-danger fw-bold px-2 py-1 m-1"
+                  style="cursor:pointer"
+                  @click="handleSpotClick(spot)"
+                  title="Occupied"
+                >
+                  O
+                </span>
               </div>
+            </div>
 
-              <div v-if="lot.warning"
-                   class="alert alert-warning mt-3"
-                   role="alert">
-                {{ lot.warning }}
-              </div>
+            <!-- lot actions -->
+            <div class="mt-3">
+              <button class="btn btn-secondary btn-sm" @click="editLot(lot.id)">Edit</button>
+              <button class="btn btn-danger btn-sm" @click="deleteLot(lot)">Delete</button>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- empty state -->
-    <div v-else>
-      <h4 class="text-center">No parking lots available at the moment.</h4>
-    </div>
+    <!-- no lots -->
+    <h4 v-else class="text-center">No parking lots available.</h4>
 
-    <!-- add‑lot button -->
+    <!-- add lot -->
     <div class="text-center mt-4">
-      <button @click="goToAddLot" class="btn btn-info">Add Parking Lot</button>
+      <button class="btn btn-info" @click="$router.push('/add_lot')">Add Parking Lot</button>
     </div>
 
-    <!-- modal for Available spot -->
-    <div class="modal fade" ref="spotModal" tabindex="-1" aria-hidden="true">
+    <!-- MODAL: Available spot -->
+    <div class="modal fade" ref="spotModal" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">Spot Details</h5>
             <button type="button" class="btn-close" @click="closeSpotModal"></button>
           </div>
-
           <div class="modal-body" v-if="selectedSpot">
             <p><strong>Spot ID:</strong> {{ selectedSpot.id }}</p>
             <p><strong>Status:</strong> Available</p>
           </div>
-
           <div class="modal-footer">
-            <button class="btn btn-danger"
-                    @click="deleteSpot(selectedSpot.id)">Delete</button>
-            <button class="btn btn-secondary"
-                    @click="closeSpotModal">Cancel</button>
+            <button class="btn btn-danger" @click="deleteSpot(selectedSpot.id)">Delete</button>
+            <button class="btn btn-secondary" @click="closeSpotModal">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: Occupied spot details -->
+    <div class="modal fade" ref="occupiedModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Occupied Spot Details</h5>
+            <button type="button" class="btn-close" @click="closeOccupiedModal"></button>
+          </div>
+          <div class="modal-body" v-if="occupiedInfo">
+            <p><strong>Reservation ID:</strong> {{ occupiedInfo.id }}</p>
+            <p><strong>User ID:</strong> {{ occupiedInfo.user_id }}</p>
+            <p><strong>Vehicle #:</strong> {{ occupiedInfo.vehicle_number }}</p>
+            <p><strong>Park In:</strong> {{ formatDT(occupiedInfo.parking_time) }}</p>
+            <p><strong>Estimated Cost:</strong> ₹{{ occupiedInfo.estimated_cost }}</p>
           </div>
         </div>
       </div>
@@ -94,14 +104,15 @@ export default {
   </div>
   `,
 
-  /* ========== DATA ========== */
   data() {
     return {
-      lots: null,
+      lots: [],
+      flash: null,
+      flashClass: 'alert-success',
+      spotModal: null,
+      occupiedModal: null,
       selectedSpot: null,
-      modalInstance: null,
-      flashMessage: null,   // NEW
-      flashTimer: null      // NEW
+      occupiedInfo: null
     };
   },
 
@@ -109,88 +120,98 @@ export default {
     this.loadLots();
   },
 
-  /* ========== METHODS ========== */
   methods: {
-    /* flash helper */
-    showFlash(msg) {
-      clearTimeout(this.flashTimer);
-      this.flashMessage = msg;
-      this.flashTimer = setTimeout(() => (this.flashMessage = null), 3000);
-    },
-
-    /* API */
-    loadLots() {
-      fetch('/api/lots', {
-        method: 'GET',
+    /* ---------- helpers ---------- */
+    req(method = 'GET') {
+      return {
+        method,
         headers: {
           'Content-Type': 'application/json',
           'Authentication-Token': localStorage.getItem('auth_token')
         }
-      })
-        .then(res => res.json())
-        .then(data => {
-          this.lots = data.map(lot => {
-            const totalSpots = (lot.spots || []).length;
-            const occupied = (lot.spots || []).filter(s => s.status === 'O').length;
-            return { ...lot, occupied_count: occupied, total_spots: totalSpots };
-          });
-        })
-        .catch(console.error);
+      };
+    },
+    formatDT(dt) { return new Date(dt).toLocaleString(); },
+    flashNow(msg, isError = false) {
+      this.flashClass = isError ? 'alert-danger' : 'alert-success';
+      this.flash = msg;
+      setTimeout(() => (this.flash = null), 3000);
     },
 
-    deleteLot(lotId) {
-      if (confirm('Are you sure you want to delete this lot?')) {
-        fetch(`/api/lots/${lotId}`, {
-          method: 'DELETE',
-          headers: { 'Authentication-Token': localStorage.getItem('auth_token') }
-        })
-          .then(res => res.json())
-          .then(() => {
-            this.showFlash('Lot deleted successfully');
-            this.loadLots();
-            this.$router.go(0) 
-          });
+    /* ---------- API calls ---------- */
+    async loadLots() {
+      const res = await fetch('/api/lots', this.req());
+      if (!res.ok) return;
+      const data = await res.json();
+      this.lots = data.map(l => ({
+        ...l,
+        occupied_count: l.spots.filter(s => s.status === 'O').length,
+        total_spots: l.spots.length
+      }));
+    },
+
+    async deleteLot(lot) {
+      if (lot.occupied_count > 0) {
+        this.flashNow('Cannot delete — one or more spots are occupied', true);
+        return;
+      }
+      if (!confirm('Delete this lot?')) return;
+      const res = await fetch(`/api/lots/${lot.id}`, this.req('DELETE'));
+      const json = await res.json();
+      if (!res.ok) {
+        this.flashNow(json.message || 'Delete failed', true);
+      } else {
+        this.flashNow('Lot deleted');
+        this.loadLots();
       }
     },
 
-    deleteSpot(spotId) {
-      if (confirm('Delete this spot?')) {
-        fetch(`/api/spots/${spotId}`, {
-          method: 'DELETE',
-          headers: { 'Authentication-Token': localStorage.getItem('auth_token') }
-        })
-          .then(res => res.json())
-          .then(() => {
-            this.closeSpotModal();
-            this.showFlash('Spot deleted successfully');
-            this.loadLots();
-          });
+    async deleteSpot(id) {
+      if (!confirm('Delete this spot?')) return;
+      const res = await fetch(`/api/spots/${id}`, this.req('DELETE'));
+      if (res.ok) {
+        this.flashNow('Spot deleted');
+        this.closeSpotModal();
+        this.loadLots();
       }
     },
 
-    /* navigation */
-    viewSpot(id) { this.$router.push(`/view_spot/${id}`); },
-    editLot(id)  { this.$router.push(`/edit_lot/${id}`); },
-    goToAddLot() { this.$router.push('/add_lot'); },
-
-    /* spot‑button logic */
+    /* ---------- spot click ---------- */
     handleSpotClick(spot) {
-      spot.status === 'A' ? this.openSpotModal(spot) : this.viewSpot(spot.id);
+      if (spot.status === 'A') {
+        this.openSpotModal(spot);
+      } else {
+        this.fetchOccupiedInfo(spot.id);
+      }
     },
 
+    /* available spot modal */
     openSpotModal(spot) {
       this.selectedSpot = spot;
-      if (!this.modalInstance)
-        this.modalInstance = new bootstrap.Modal(this.$refs.spotModal);
-      this.modalInstance.show();
+      if (!this.spotModal)
+        this.spotModal = new bootstrap.Modal(this.$refs.spotModal);
+      this.spotModal.show();
+    },
+    closeSpotModal() {
+      if (this.spotModal) this.spotModal.hide();
+      this.selectedSpot = null;
     },
 
-    closeSpotModal() {
-      if (this.modalInstance) {
-        if (document.activeElement) document.activeElement.blur();
-        this.modalInstance.hide();
-      }
-      this.selectedSpot = null;
-    }
+    /* occupied spot modal */
+    async fetchOccupiedInfo(spotId) {
+      const res = await fetch(`/api/spot_info/${spotId}`, this.req());
+      if (!res.ok) return this.flashNow('Failed to load info', true);
+      this.occupiedInfo = await res.json();
+      if (!this.occupiedModal)
+        this.occupiedModal = new bootstrap.Modal(this.$refs.occupiedModal);
+      this.occupiedModal.show();
+    },
+    closeOccupiedModal() {
+      if (this.occupiedModal) this.occupiedModal.hide();
+      this.occupiedInfo = null;
+    },
+
+    /* ---------- nav ---------- */
+    editLot(id) { this.$router.push(`/edit_lot/${id}`); }
   }
 };

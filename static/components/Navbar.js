@@ -1,91 +1,82 @@
 // Navbar.vue
 export default {
   template: `
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3">
-    <router-link class="navbar-brand fw-bold" :to="homeRoute">
-      Parking Lot App
-    </router-link>
+<nav class="navbar navbar-expand-lg navbar-dark navbar-gradient shadow-lg px-4">
+  <div class="mx-auto order-0 px-4" >
+    <a href="/" class="navbar-brand fw-bold fs-5 text-uppercase">
+      Parking Lot App
+    </a>
+  </div>
+  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navCollapse"> <span class="navbar-toggler-icon"></span></button>
 
-    <!-- hamburger for small screens -->
-    <button
-      class="navbar-toggler"
-      type="button"
-      data-bs-toggle="collapse"
-      data-bs-target="#navCollapse"
-    >
-      <span class="navbar-toggler-icon"></span>
-    </button>
-
-    <div id="navCollapse" class="collapse navbar-collapse">
-      <ul class="navbar-nav me-auto" v-if="loggedIn">
-        <!-- admin‑only links -->
-        <template v-if="isAdmin">
-          <li class="nav-item">
-            <router-link class="nav-link" to="/admin_dash">Home</router-link>
-          </li>
-          <li class="nav-item">
-            <router-link class="nav-link" to="/user_details">User Details</router-link>
-          </li>
-          <li class="nav-item">
-            <router-link class="nav-link" to="/admin_summary">Summary</router-link>
-          </li>
-        </template>
-
-        <!-- normal user link -->
-        <template v-else>
-          <li class="nav-item">
-            <router-link class="nav-link" to="/user_dash">Home</router-link>
-          </li>
-          <li class="nav-item">
-            <router-link class="nav-link" to="/user_summary">Summary</router-link>
-          </li>
-        </template>
-      </ul>
-
-      <!-- right‑side actions -->
-      <div class="d-flex align-items-center ms-auto">
-        <span v-if="loggedIn" class="text-white me-3">
-          Welcome,&nbsp;{{ user?.name || '...' }}
-        </span>
-
-        <template v-if="loggedIn">
-          <button class="btn btn-outline-light btn-sm" @click="logout">
-            Logout
+  <div id="navCollapse" class="collapse navbar-collapse">
+    <ul class="navbar-nav me-auto d-flex align-items-center gap-4" v-if="loggedIn">
+      <template v-if="isAdmin">
+        <li class="nav-item">
+          <router-link class="btn btn-outline-light btn-sm fw-bold" to="/admin_dash">Home</router-link>
+        </li>
+        <li class="nav-item">
+          <router-link class="btn btn-outline-light btn-sm fw-bold" to="/user_details">User Details</router-link>
+        </li>
+        <li class="nav-item">
+          <router-link class="btn btn-outline-light btn-sm fw-bold" to="/admin_summary">Summary</router-link>
+        </li>
+        <li class="nav-item">
+          <button class="btn btn-outline-light btn-sm fw-bold" @click="logout">
+             Logout
           </button>
-        </template>
+        </li>
+      </template>
+      <template v-else>
+        <li class="nav-item">
+          <router-link class="btn btn-outline-light btn-sm fw-bold" to="/user_dash">Home</router-link>
+        </li>
+        <li class="nav-item">
+          <router-link class="btn btn-outline-light btn-sm fw-bold" to="/user_summary">Summary</router-link>
+        </li>
+        <li class="nav-item">
+          <button class="btn btn-outline-light btn-sm fw-bold" @click="logout">
+             Logout
+          </button>
+        </li>
+      </template>
+    </ul>
 
-        <template v-else>
-          <router-link class="btn btn-primary me-2" to="/login">Login</router-link>
-          <router-link class="btn btn-warning" to="/register">Register</router-link>
-        </template>
-      </div>
+    <div class="d-flex align-items-center ms-auto me-3 gap-3">
+      <span v-if="loggedIn" class="text-white"
+        style="font-family: 'Segoe UI', sans-serif; font-size: 1.25rem; letter-spacing: 3px; margin-right: 30px;"
+      >
+        Welcome,&nbsp;<strong>{{ user?.name || '...' }}</strong>
+      </span>
+      <template v-else>
+        <router-link class="btn btn-outline-light btn-sm fw-bold" to="/login">Login</router-link>
+        <router-link class="btn btn-outline-light btn-sm fw-bold" to="/register">Register</router-link>
+      </template>
     </div>
-  </nav>
+  </div>
+</nav>
+
   `,
 
   data() {
     return {
       loggedIn: false,
-      user: null          // { id, name, roles: [...] }
+      user: null 
     };
   },
-
   computed: {
     isAdmin()   { return this.user?.roles?.includes('admin'); },
     homeRoute() { return this.isAdmin ? '/admin' : '/home'; }
   },
 
   methods: {
-    /** read token → set loggedIn flag → fetch user if needed */
     async syncAuthState() {
     const token = localStorage.getItem('auth_token');
-
     if (!token) {
       this.loggedIn = false;
       this.user = null;
       return;
     }
-
     try {
       const res = await fetch('/api/me', {
         headers: { 'Authentication-Token': token }
@@ -95,7 +86,6 @@ export default {
         this.user = await res.json();
         this.loggedIn = true;
       } else {
-        // token invalid or expired
         localStorage.removeItem('auth_token');
         this.loggedIn = false;
         this.user = null;
@@ -116,8 +106,6 @@ export default {
 
   created() {
     this.syncAuthState();
-
-    // keep navbar up‑to‑date on every route change
     this.$router.afterEach(() => this.syncAuthState());
   }
 };

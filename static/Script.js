@@ -11,11 +11,6 @@ import Admin_summary from './components/Admin_summary.js'
 import User_dash from './components/User_dash.js'
 import User_summary from './components/User_summary.js'
 
-
-
-
-
-
 const routes = [ 
     {path: '/', component: Home},
     {path: '/login', component: Login },
@@ -27,32 +22,31 @@ const routes = [
     {path: '/admin_summary', component: Admin_summary},
     {path: '/user_dash', component: User_dash},
     {path: '/user_summary', component: User_summary},
-
-
-
-
-
 ]
 
 const router = new VueRouter({
-    routes // rote: route
+    routes
 })
 
 const app = new Vue({
     el: "#app",
-    router, // router: router its a defined attribute of javascript
+    router,
     template: `
-    <div class="container">
-        <nav-bar></nav-bar>
+    <div class="d-flex flex-column min-vh-100">
+      <nav-bar></nav-bar>
+
+      <main class="flex-grow-1">
         <router-view></router-view>
-        <foot></foot>
+      </main>
+
+      <foot></foot>
     </div>
     `,
     data: {
         section: "Frontend"
     },
     components:{
-        "nav-bar": Navbar,  // here we use "" for - bcz key cant have - 
+        "nav-bar": Navbar,  // here we are using "" for - bcz key cant have - 
         foot: Footer
 
     }

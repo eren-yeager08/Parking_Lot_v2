@@ -1,48 +1,46 @@
 export default {
   template: `
-    <div class="container mt-4">
-      <h2 class="mb-4">Edit Parking Lot</h2>
-
+  <div class="container-fluid px-4 py-4" style="background-color: #06262eff; min-height: 100vh;">
+    <div class="container position-relative" style="z-index: 1; max-width: 520px;">
+      <h2 class="text-center mb-4 text-white fw-semibold " style="letter-spacing: 1px;">
+          Edit Parking Lot  
+      </h2>
       <div v-if="loading" class="text-center">
-        <div class="spinner-border text-primary" role="status">
+        <div class="spinner-border text-light" role="status">
           <span class="visually-hidden">Loading...</span>
         </div>
       </div>
-
-      <div v-else class="card p-4 mx-auto" style="max-width: 500px;">
-        <div class="mb-3">
-          <label class="form-label">Location Name</label>
-          <input v-model="lot.prime_location_name" type="text" class="form-control" />
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">Address</label>
-          <input v-model="lot.address" type="text" class="form-control" />
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">Pincode</label>
-          <input v-model="lot.pincode" type="text" class="form-control" />
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">Price Per Hour</label>
-          <input v-model.number="lot.price_per_hour" type="number" class="form-control" />
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">Max Number of Spots</label>
-          <input v-model.number="lot.maximum_number_of_spots" type="number" class="form-control" />
-        </div>
-
-        <div class="d-flex justify-content-between">
-          <button @click="updateLot" class="btn btn-primary">Save</button>
-          <button @click="$router.push('/admin_dash')" class="btn btn-secondary">Cancel</button>
+      <div v-else class="card shadow-lg rounded" style="background-color: rgba(197, 219, 201, 0.93);">
+        <div class="card-body p-4">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Location Name</label>
+            <input v-model="lot.prime_location_name" type="text" class="form-control" placeholder="e.g., MG Road" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Address</label>
+            <input v-model="lot.address" type="text" class="form-control" placeholder="Street, Area, City" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Pincode</label>
+            <input v-model="lot.pincode" type="text" class="form-control" placeholder="e.g., 560001" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Price Per Hour</label>
+            <input v-model.number="lot.price_per_hour" type="number" min="0" class="form-control" placeholder="₹ per hour" />
+          </div>
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Max Number of Spots</label>
+            <input v-model.number="lot.maximum_number_of_spots" type="number" min="1" class="form-control" placeholder="e.g., 25" />
+          </div>
+          <div class="d-flex justify-content-between">
+            <button @click="updateLot" class="btn btn-primary fw-semibold">Save</button>
+            <button @click="$router.push('/admin_dash')" class="btn btn-secondary fw-semibold">Cancel</button>
+          </div>
         </div>
       </div>
     </div>
-  `,
-
+  </div>`
+  ,
     data() {
         return {
         lot: {

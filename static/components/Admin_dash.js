@@ -1,109 +1,100 @@
 export default {
   template: `
-  <div class="container mt-4">
-    <h2 class="mb-4">Parking Lots</h2>
+  <div class="d-flex flex-column vh-100 position-relative" style="background-color: #121e2b;">
+    <img 
+      src="/static/images/parking.png" 
+      class="position-absolute top-0 start-0 w-100 h-100" 
+      style="object-fit: cover; filter: blur(1px); z-index: 0;"
+      alt="Background" >
 
-    <!-- flash -->
-    <div v-if="flash" :class="flashClass" class="alert alert-dismissible fade show" role="alert">
-      {{ flash }}
-      <button class="btn-close" @click="flash = null"></button>
-    </div>
-
-    <!-- PARKING LOT CARDS -->
-    <div v-if="lots.length" class="row">
-      <div class="col-md-4 mb-3" v-for="(lot, idx) in lots" :key="lot.id">
-        <div class="card h-100">
-          <div class="card-body">
-            <h5 class="card-title">Parking #{{ idx + 1 }}</h5>
-            <h6>{{ lot.prime_location_name }}</h6>
-            <p>Occupied: {{ lot.occupied_count }} / {{ lot.total_spots }}</p>
-
-            <!-- spots -->
-            <div class="row row-cols-auto g-2 mt-2">
-              <div class="row row-cols-auto g-2">
+    <div class="container text-center mt-4 position-relative" style="z-index: 1;">
+      <div class="w-100 bg-white bg-opacity-80 py-2 mb-3">
+        <h2 class="text-center fw-semibold text-uppercase text-dark m-0 fs-4">Parking Lots</h2>
+      </div>
+      <div v-if="flash" :class="flashClass" class="alert alert-dismissible fade show" role="alert">
+        {{ flash }}
+        <button class="btn-close" @click="flash = null"></button>
+      </div>
+      <div v-if="lots.length" class="row">
+        <div class="col-md-4 mb-4" v-for="(lot, idx) in lots" :key="lot.id">
+          <div class="card h-100 shadow-lg rounded bg-white bg-opacity-90">
+            <div class="bg-primary text-white py-2 rounded-top">
+              <h5 class="mb-0">Parking #{{ idx + 1 }}</h5>
+            </div>
+            <div class="card-body">
+              <h6 class="mb-2 text-decoration-underline text-dark">
+                {{ lot.prime_location_name }}
+              </h6>
+              <p class="text-muted mb-3">Occupied: {{ lot.occupied_count }} / {{ lot.total_spots }}</p>
+              <div class="d-flex flex-wrap justify-content-center gap-2 mt-3">
                 <button
                   v-for="spot in lot.spots"
                   :key="spot.id"
                   v-if="spot.status === 'A'"
-                  class="btn btn-sm btn-success fw-bold px-2 py-1 m-1"
+                  class="btn btn-sm btn-success fw-bold"
                   @click="handleSpotClick(spot)"
-                  title="Available"
-                >
-                  A
+                  title="Available"> A 
                 </button>
-
                 <span
                   v-else
                   :key="spot.id"
-                  class="btn btn-sm btn-danger fw-bold px-2 py-1 m-1"
-                  style="cursor:pointer"
+                  class="btn btn-sm btn-danger fw-bold"
                   @click="handleSpotClick(spot)"
-                  title="Occupied"
-                >
-                  O
+                  title="Occupied" style="cursor: pointer;"> O 
                 </span>
               </div>
-            </div>
-
-            <!-- lot actions -->
-            <div class="mt-3">
-              <button class="btn btn-secondary btn-sm" @click="editLot(lot.id)">Edit</button>
-              <button class="btn btn-danger btn-sm" @click="deleteLot(lot)">Delete</button>
+              <div class="mt-4 d-flex justify-content-center gap-2">
+                <button class="btn btn-secondary btn-sm" @click="editLot(lot.id)">Edit</button>
+                <button class="btn btn-danger btn-sm" @click="deleteLot(lot)">Delete</button>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- no lots -->
-    <h4 v-else class="text-center">No parking lots available.</h4>
-
-    <!-- add lot -->
-    <div class="text-center mt-4">
-      <button class="btn btn-info" @click="$router.push('/add_lot')">Add Parking Lot</button>
-    </div>
-
-    <!-- MODAL: Available spot -->
-    <div class="modal fade" ref="spotModal" tabindex="-1">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Spot Details</h5>
-            <button type="button" class="btn-close" @click="closeSpotModal"></button>
-          </div>
-          <div class="modal-body" v-if="selectedSpot">
-            <p><strong>Spot ID:</strong> {{ selectedSpot.id }}</p>
-            <p><strong>Status:</strong> Available</p>
-          </div>
-          <div class="modal-footer">
-            <button class="btn btn-danger" @click="deleteSpot(selectedSpot.id)">Delete</button>
-            <button class="btn btn-secondary" @click="closeSpotModal">Cancel</button>
+      <h4 v-else class="text-white fw-semibold mt-5">No parking lots available.</h4>
+      <div class="d-flex justify-content-center mt-4">
+        <button class="btn btn-lg btn-primary fw-semibold text-white px-5" @click="$router.push('/add_lot')" >
+          Add Parking Lot
+        </button>
+      </div>
+   </div>
+      <div class="modal fade custom-modal" ref="spotModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Spot Details</h5>
+              <button type="button" class="btn-close" @click="closeSpotModal"></button>
+            </div>
+            <div class="modal-body" v-if="selectedSpot">
+              <p><strong>Spot ID:</strong> {{ selectedSpot.id }}</p>
+              <p><strong>Status:</strong> Available</p>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-danger" @click="deleteSpot(selectedSpot.id)">Delete</button>
+              <button class="btn btn-secondary" @click="closeSpotModal">Cancel</button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- MODAL: Occupied spot details -->
-    <div class="modal fade" ref="occupiedModal" tabindex="-1">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Occupied Spot Details</h5>
-            <button type="button" class="btn-close" @click="closeOccupiedModal"></button>
-          </div>
-          <div class="modal-body" v-if="occupiedInfo">
-            <p><strong>Reservation ID:</strong> {{ occupiedInfo.id }}</p>
-            <p><strong>User ID:</strong> {{ occupiedInfo.user_id }}</p>
-            <p><strong>Vehicle #:</strong> {{ occupiedInfo.vehicle_number }}</p>
-            <p><strong>Park In:</strong> {{ formatDT(occupiedInfo.parking_time) }}</p>
-            <p><strong>Estimated Cost:</strong> ₹{{ occupiedInfo.estimated_cost }}</p>
+      <div class="modal fade custom-modal" ref="occupiedModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Occupied Spot Details</h5>
+              <button type="button" class="btn-close" @click="closeOccupiedModal"></button>
+            </div>
+            <div class="modal-body" v-if="occupiedInfo">
+              <p><strong>Reservation ID:</strong> {{ occupiedInfo.id }}</p>
+              <p><strong>User ID:</strong> {{ occupiedInfo.user_id }}</p>
+              <p><strong>Vehicle Number :</strong> {{ occupiedInfo.vehicle_number }}</p>
+              <p><strong>Parking Time:</strong> {{ formatDT(occupiedInfo.parking_time) }}</p>
+              <p><strong>Estimated Cost:</strong> ₹{{ occupiedInfo.estimated_cost }}</p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </div>
-  `,
-
+  </div> `
+  ,
   data() {
     return {
       lots: [],
@@ -121,7 +112,6 @@ export default {
   },
 
   methods: {
-    /* ---------- helpers ---------- */
     req(method = 'GET') {
       return {
         method,
@@ -138,7 +128,6 @@ export default {
       setTimeout(() => (this.flash = null), 3000);
     },
 
-    /* ---------- API calls ---------- */
     async loadLots() {
       const res = await fetch('/api/lots', this.req());
       if (!res.ok) return;
@@ -163,6 +152,7 @@ export default {
       } else {
         this.flashNow('Lot deleted');
         this.loadLots();
+        this.$router.go(0);
       }
     },
 
@@ -176,7 +166,6 @@ export default {
       }
     },
 
-    /* ---------- spot click ---------- */
     handleSpotClick(spot) {
       if (spot.status === 'A') {
         this.openSpotModal(spot);
@@ -185,19 +174,20 @@ export default {
       }
     },
 
-    /* available spot modal */
     openSpotModal(spot) {
       this.selectedSpot = spot;
       if (!this.spotModal)
         this.spotModal = new bootstrap.Modal(this.$refs.spotModal);
       this.spotModal.show();
     },
+
     closeSpotModal() {
       if (this.spotModal) this.spotModal.hide();
       this.selectedSpot = null;
+      document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+      document.body.classList.remove('modal-open');
     },
 
-    /* occupied spot modal */
     async fetchOccupiedInfo(spotId) {
       const res = await fetch(`/api/spot_info/${spotId}`, this.req());
       if (!res.ok) return this.flashNow('Failed to load info', true);
@@ -206,12 +196,15 @@ export default {
         this.occupiedModal = new bootstrap.Modal(this.$refs.occupiedModal);
       this.occupiedModal.show();
     },
-    closeOccupiedModal() {
-      if (this.occupiedModal) this.occupiedModal.hide();
-      this.occupiedInfo = null;
-    },
 
-    /* ---------- nav ---------- */
+    closeOccupiedModal() {
+      if (this.occupiedModal) {
+        this.occupiedModal.hide();
+      }
+      this.occupiedInfo = null;
+      document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    },
+    
     editLot(id) { this.$router.push(`/edit_lot/${id}`); }
   }
 };

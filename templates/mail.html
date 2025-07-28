@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Monthly Parking Report</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container my-5">
+        <div class="bg-white p-4 p-md-5 rounded shadow-sm">
+            <h2 class="text-center mb-4">Monthly Parking Summary</h2>
+            <p>Hello <strong>{{ data.username }}</strong>,</p>
+            {% if data.reservations %}
+                <p>Please find your monthly parking activity report below:</p>
+
+                <ul class="list-group list-group-flush mb-4">
+                    <li class="list-group-item"><strong>Total Bookings:</strong> {{ data.summary.total_bookings }}</li>
+                    <li class="list-group-item"><strong>Total Amount Spent:</strong> ₹{{ data.summary.amount_spent }}</li>
+                    <li class="list-group-item"><strong>Most Used Lot:</strong> {{ data.summary.most_used_lot }}</li>
+                </ul>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead class="table-dark text-center">
+                            <tr>
+                                <th>Location</th>
+                                <th>Vehicle Number</th>
+                                <th>Spot ID</th>
+                                <th>Parking Time</th>
+                                <th>Releasing Time</th>
+                                <th>Total Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for res in data.reservations %}
+                            <tr>
+                                <td>{{ res.lot }}</td>
+                                <td>{{ res.vehicle }}</td>
+                                <td>{{ res.spot }}</td>
+                                <td>{{ res.booked_at }}</td>
+                                <td>{{ res.released_at }}</td>
+                                <td>{{ res.cost }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-warning mt-3">
+                    It appears there were no parking activities associated with your account this month.
+                </div>
+            {% endif %}
+
+            <p class="mt-4">Thank you for using our service!</p>
+            <p class="text-muted mb-0">— Vehicle Parking App Team</p>
+            <div class="text-center mt-5">
+                <small class="text-muted">
+                    Parking Lot App &nbsp;|&nbsp; © 2025 &nbsp;|&nbsp; Created by <strong>Eren Yeager</strong>
+                </small>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

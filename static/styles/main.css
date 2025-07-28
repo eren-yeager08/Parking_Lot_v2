@@ -1,0 +1,17 @@
+.navbar-gradient {
+  background: linear-gradient(135deg, #003c47 0%, #00696f 50%, #215d63  100%);
+}
+
+.custom-card {
+  background: linear-gradient(135deg, #80a7e0, #e6f0ff);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  border: none;
+  border-radius: 16px;
+  padding: 1.5rem;
+  transition: transform 0.2s ease-in-out;
+}
+
+.custom-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}

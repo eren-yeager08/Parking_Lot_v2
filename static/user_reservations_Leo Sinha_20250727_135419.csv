@@ -1,0 +1,5 @@
+Reservation ID,Lot Name,Spot ID,Vehicle Number,Parking Time,Leaving Time,Total Cost,Status
+1,Noida,1,HIHJLO65,24-07-2025 10:59 AM,24-07-2025 11:00 AM,5.0,Completed
+2,Auraiya,6,GH5H87H,24-07-2025 11:00 AM,24-07-2025 11:00 AM,10.0,Completed
+3,Goa,16,GFH765TG,24-07-2025 11:00 AM,24-07-2025 07:46 PM,135.0,Completed
+13,Noida,1,HIO76HFH,26-07-2025 10:05 AM,26-07-2025 04:19 PM,35.0,Completed

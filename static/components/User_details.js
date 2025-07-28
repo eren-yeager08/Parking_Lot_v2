@@ -3,14 +3,14 @@ export default {
     <div class="d-flex flex-column vh-100 position-relative" style="background-color: #06262eff;">
       <div class="container position-relative mt-4" style="z-index: 1;">
         <h2 class="text-center mb-4 text-white fw-semibold " style="letter-spacing: 1px;">
-          All Registered users
+          All Registered Users
         </h2>
-        <div class="card bg-white bg-opacity-90 shadow-lg p-3 rounded">
+        <div class="bg-opacity-90 shadow-lg p-3 rounded">
           <div class="table-responsive">
             <table class="table table-striped text-center rounded overflow-hidden" v-if="users.length">
               <thead class="text-white" style="background-color: #007e7e;">
                 <tr>
-                  <th style="background-color: #007e7e; color: white;">Lot ID</th>
+                  <th style="background-color: #007e7e; color: white;">User ID</th>
                   <th style="background-color: #007e7e; color: white;">Email</th>
                   <th style="background-color: #007e7e; color: white;">Username</th>
                   <th style="background-color: #007e7e; color: white;">Pincode</th>

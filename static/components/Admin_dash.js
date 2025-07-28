@@ -1,23 +1,18 @@
 export default {
   template: `
-  <div class="d-flex flex-column vh-100 position-relative" style="background-color: #121e2b;">
-    <img 
-      src="/static/images/parking.png" 
-      class="position-absolute top-0 start-0 w-100 h-100" 
-      style="object-fit: cover; filter: blur(1px); z-index: 0;"
-      alt="Background" >
-
+  <div class="position-relative min-vh-100 d-flex flex-column" style="background-color: #06262eff;">
+    
     <div class="container text-center mt-4 position-relative" style="z-index: 1;">
-      <div class="w-100 bg-white bg-opacity-80 py-2 mb-3">
-        <h2 class="text-center fw-semibold text-uppercase text-dark m-0 fs-4">Parking Lots</h2>
-      </div>
+      <h2 class="text-center mb-4 text-white fw-semibold text-uppercase" style="letter-spacing: 1px;">
+        My Parking Lots 
+      </h2>
       <div v-if="flash" :class="flashClass" class="alert alert-dismissible fade show" role="alert">
         {{ flash }}
         <button class="btn-close" @click="flash = null"></button>
       </div>
       <div v-if="lots.length" class="row">
         <div class="col-md-4 mb-4" v-for="(lot, idx) in lots" :key="lot.id">
-          <div class="card h-100 shadow-lg rounded bg-white bg-opacity-90">
+          <div class="card h-100 shadow-lg rounded" style="background-color: #e0efecff;">
             <div class="bg-primary text-white py-2 rounded-top">
               <h5 class="mb-0">Parking #{{ idx + 1 }}</h5>
             </div>
@@ -52,12 +47,13 @@ export default {
         </div>
       </div>
       <h4 v-else class="text-white fw-semibold mt-5">No parking lots available.</h4>
-      <div class="d-flex justify-content-center mt-4">
-        <button class="btn btn-lg btn-primary fw-semibold text-white px-5" @click="$router.push('/add_lot')" >
-          Add Parking Lot
+      <div class="d-flex justify-content-center mt-2 row border mb-4" style="background-color: #e0efecff; border-radius: 0.5rem;">
+        <button class="btn fw-bold text-dark" @click="$router.push('/add_lot')">
+          + Add Parking Lot
         </button>
       </div>
-   </div>
+    </div>
+
       <div class="modal fade custom-modal" ref="spotModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">

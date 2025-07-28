@@ -1,12 +1,13 @@
 from datetime import datetime, timezone, timedelta
 from math import ceil
+from flask import render_template_string
 
-from jinja2 import Template
 def roles_list(roles):
     role_list = []
     for role in roles:
         role_list.append(role.name)
     return role_list
+
 
 def calc_total(r):
     IST = timezone(timedelta(hours=5, minutes=30))
@@ -22,10 +23,7 @@ def calc_total(r):
     return cost
 
 
-
-
-
-def format_report(template_path, data):
-    with open(template_path) as f:
-        template = Template(f.read())
-    return template.render(data=data)
+def format_report(template_path, context):
+    with open(template_path, 'r') as f:
+        html = f.read()
+    return render_template_string(html, **context)

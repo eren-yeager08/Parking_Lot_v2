@@ -1,20 +1,25 @@
 from .database import db
 from .models import *
-from flask import current_app as app, jsonify, request, render_template
+from flask import current_app as app, jsonify, request, render_template, send_from_directory
 from flask_security import auth_required, roles_required, current_user, login_user, roles_accepted
 from werkzeug.security import check_password_hash, generate_password_hash
 from .utily import roles_list
+from celery.result import AsyncResult
+from .task import export_user_csv
+
 
 
 @app.route('/', methods = ['GET'])
 def home():
     return render_template('index.html')
 
+
 @app.route('/admin') 
-@auth_required('token') # Authentication
-@roles_required('admin') # Authorization / RBAC 
+@auth_required('token') 
+@roles_required('admin') 
 def admin_home():
     return jsonify({"message" : "admin is logged in successfully"})
+
 
 @app.route('/api/home')
 @auth_required('token')
@@ -26,6 +31,7 @@ def user_home():
         "email": user.email,
         "roles": roles_list(user.roles)
     })
+
 
 @app.route('/api/login', methods=['POST'])
 def user_login():
@@ -64,39 +70,18 @@ def create_user():
     return jsonify({"message": "User already exists!"}), 400 ,
 
 
-@app.route('/api/export')
-@auth_required("token")
-@roles_required("admin")
-def export_csv():
-    result = download_reservations_csv.delay()
-    return jsonify({"id": result.id})
+@app.route('/api/user/export')
+@auth_required('token')
+@roles_required('user')
+def trigger_user_csv_export():
+    user_id = current_user.id
+    result = export_user_csv.delay(user_id)
+    return jsonify({ "id": result.id })
 
 
 @app.route('/api/csv_result/<id>')
-@auth_required("token")
-@roles_required("admin")
 def get_csv_file(id):
-    result = AsyncResult(id)
-    if not result.ready():
-        return jsonify({"status": "Pending", "message": "File is still being generated. Try again later."}), 202
-    if result.failed():
-        return jsonify({"status": "Failed", "message": "Task failed to complete."}), 500
-    filename = result.result
-    if not filename:
-        return jsonify({"status": "Error", "message": "No file generated."}), 500
-    try:
-        print("Sending file:", filename)
-        print("Directory contents:", os.listdir('static'))
-        return send_from_directory('static', filename, as_attachment=True)
-    except Exception as e:
-        print("Error sending file:", e)
-        return jsonify({"status": "Error", "message": str(e)}), 500
-    
+    res = AsyncResult(id)
+    return send_from_directory('static', res.result)
 
-@app.route('/api/mail', methods=['GET'])
-def send_reports():
-    res = monthly_reservation_report.delay()
-    return {
-        "status": "queued",
-        "task_id": res.id
-    }
+

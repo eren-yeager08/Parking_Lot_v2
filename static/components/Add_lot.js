@@ -5,7 +5,7 @@ export default {
         <h2 class="text-center mb-4 text-white fw-semibold " style="letter-spacing: 1px;">
           Add Parking Lot  
         </h2>
-        <div class="card shadow-lg rounded" style="background-color: rgba(197, 219, 201, 0.93);">
+        <div class="card shadow-lg rounded" style="background-color: rgba(197, 217, 219, 0.93);">
           <div class="card-body p-4">
             <div class="mb-3">
               <label class="form-label fw-semibold">Location Name</label>

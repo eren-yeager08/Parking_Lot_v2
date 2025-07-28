@@ -4,6 +4,7 @@ from flask_security import auth_required, roles_required, roles_accepted, curren
 from datetime import datetime ,timezone, timedelta
 from .database import db
 from .utily import *
+from application.cache import cache
 
 api = Api()
 
@@ -36,12 +37,7 @@ class ParkingLotAPI(Resource):
                     "pincode": lot.pincode,
                     "price_per_hour": lot.price_per_hour,
                     "maximum_number_of_spots": lot.maximum_number_of_spots,
-                    "spots": [
-                        {
-                            "id": spot.id,
-                            "status": spot.status
-                        } for spot in lot.spots
-                    ]
+                    "spots": [{"id": spot.id, "status": spot.status} for spot in lot.spots]
                 })
             if lots_json:
                 return lots_json, 200
@@ -55,12 +51,8 @@ class ParkingLotAPI(Resource):
                 "pincode": lot.pincode,
                 "price_per_hour": lot.price_per_hour,
                 "maximum_number_of_spots": lot.maximum_number_of_spots,
-                "spots": [
-                    {
-                        "id": spot.id,
-                        "status": spot.status
-                    } for spot in lot.spots ]}, 200
-
+                "spots": [{"id": spot.id, "status": spot.status} for spot in lot.spots ]}, 200
+                
     @auth_required('token')
     @roles_required('admin')
     def post(self):
@@ -165,6 +157,7 @@ api.add_resource(CurrentUserAPI, "/api/me")
 class UserListAPI(Resource):
     @auth_required('token')
     @roles_required('admin')
+    @cache.cached(timeout=300)
     def get(self):
         users = User.query.filter(User.id != current_user.id).all()
         data = []
@@ -190,6 +183,7 @@ api.add_resource(UserListAPI, "/api/users")
 class AdminSummaryAPI(Resource):
     @auth_required('token')
     @roles_required('admin')
+    @cache.cached(timeout=300)
     def get(self):
         total_users = User.query.filter(User.roles.any(name='user')).count()
         total_lots = ParkingLot.query.count()
@@ -233,6 +227,7 @@ api.add_resource(AdminSummaryAPI, "/api/admin_summary")
 
 class MyReservationAPI(Resource):
     @auth_required('token')
+    # @cache.cached(timeout=300)
     def get(self):
         history = []
         for r in current_user.reservations:
@@ -254,6 +249,7 @@ api.add_resource(MyReservationAPI, "/api/my_reservations")
 ####################################################################################
 class ReservationCostAPI(Resource):
     @auth_required('token')
+    @cache.cached(timeout=300)
     def get(self, res_id):
         r = Reservation.query.get_or_404(res_id)
         if r.user_id != current_user.id and not current_user.has_role('admin'):
@@ -305,6 +301,7 @@ api.add_resource(ReservationAPI, "/api/reservations", "/api/reservations/<int:re
 
 class UserSummaryAPI(Resource):
     @auth_required('token')
+    @cache.cached(timeout=300)
     def get(self):
         from collections import Counter
         usage = Counter()
@@ -324,6 +321,7 @@ api.add_resource(UserSummaryAPI, "/api/user_summary")
 
 class SpotInfoAPI(Resource):
     @auth_required('token')
+    @cache.cached(timeout=300)
     def get(self, spot_id):
         spot = ParkingSpot.query.get_or_404(spot_id)
         reservation = Reservation.query.filter_by(spot_id=spot.id, leaving_time=None).first()
@@ -338,7 +336,7 @@ class SpotInfoAPI(Resource):
             "estimated_cost": estimated_cost  
         }, 200
 
-api.add_resource(SpotInfoAPI, "/api/spot_info/<int:spot_id>")
+api.add_resource(SpotInfoAPI, "/api/spot_info/<int:spot_id>")   
 
 
 

@@ -6,11 +6,19 @@ export default {
         <button type="button" class="btn-close" @click="flash = null"></button>
       </div>
 
-      <h3 class="text-center mb-3 text-white fw-semibold" style="letter-spacing: 1px;">
+      <div class="text-end">
+        <button class="btn btn-sm fw-bold d-inline-flex align-items-center gap-1 mb-2"
+                @click="exportMyCSV"
+                style="background-color: #e9f3f3ff; color: #000;">
+          <i class="bi bi-download"></i>
+          Export My Reservations
+        </button>
+      </div>
+      <h3 class="text-center text-white fw-semibold" style="letter-spacing: 1px;">
         Available Parking Lots 
       </h3>
       <div class="table-responsive mt-3" style="max-height: 45vh; overflow-x: auto;">
-        <div class="overflow-hidden rounded-3 shadow-sm"> <!-- Rounded wrapper -->
+        <div class="overflow-hidden rounded-3 shadow-sm"> 
           <table class="table table-striped align-middle mb-3">
             <thead>
               <tr>
@@ -35,7 +43,6 @@ export default {
           </table>
         </div>
       </div>
-      
       <h3 class="text-center mb-3 text-white fw-semibold" style="letter-spacing: 1px;">
         My parking History 
       </h3>
@@ -60,11 +67,11 @@ export default {
                 <td>{{ formatDT(r.parking_time) }}</td>
                 <td>{{ r.leaving_time ? formatDT(r.leaving_time) : '—' }}</td>
                 <td>
-                  <button v-if="!r.leaving_time" class="btn btn-sm text-white fw-bold" style="background-color: #cc0033;" @click="openReleaseForm(r)">
-                    Release
+                  <button v-if="!r.leaving_time" class="btn btn-sm text-white fw-bold" style="background-color: #c00b39ff;" @click="openReleaseForm(r)">
+                    Occupied
                   </button>
                   <span v-else class="btn btn-sm fw-bold text-white" style="background-color: #6e250f8e; pointer-events: none; cursor: default;">
-                    Parked Out
+                    Released
                   </span>
                 </td>
               </tr>
@@ -322,6 +329,28 @@ export default {
 
     async refresh() {
       await Promise.all([this.loadLots(), this.loadReservations()]);
+    },
+    async exportMyCSV() {
+        try {
+            const res = await fetch('/api/user/export', this.req('GET'));
+            if (!res.ok) {
+                const errorData = await res.json();
+                return alert(errorData.message || 'Export failed');
+            }
+
+            const data = await res.json();
+            if (data.id) {
+                setTimeout(() => {
+                    window.location.href = `/api/csv_result/${data.id}`;
+                    alert('✅ CSV downloaded successfully!');
+                }, 1000);
+            } else {
+                alert('Export failed: No task ID received');
+            }
+        } catch (error) {
+            console.error("Export failed:", error);
+            alert('Export failed. Please try again later.');
+        }
     }
   }
 };

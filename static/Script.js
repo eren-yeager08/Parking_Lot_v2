@@ -39,7 +39,7 @@ const app = new Vue({
         <router-view></router-view>
       </main>
 
-      <foot></foot>
+      <foot class="mt-auto"></foot>
     </div>
     `,
     data: {

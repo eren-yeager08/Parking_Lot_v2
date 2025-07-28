@@ -12,16 +12,6 @@
 }
 
 .custom-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-10px);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
-}
-
-.custom-card h5 {
-  color: #333;
-  font-weight: 600;
-}
-
-.custom-card p {
-  font-size: 2rem;
-  color: #1a2218;
 }

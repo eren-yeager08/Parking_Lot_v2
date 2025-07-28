@@ -336,7 +336,7 @@ class SpotInfoAPI(Resource):
             "estimated_cost": estimated_cost  
         }, 200
 
-api.add_resource(SpotInfoAPI, "/api/spot_info/<int:spot_id>")
+api.add_resource(SpotInfoAPI, "/api/spot_info/<int:spot_id>")   
 
 
 

@@ -3,3 +3,5 @@
 # timezone = "Asia/Kolkata"
 # broker_connection_retry_on_startup = True
 
+broker_url = "memory://"
+result_backend = "rpc://"

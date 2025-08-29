@@ -183,7 +183,7 @@ api.add_resource(UserListAPI, "/api/users")
 class AdminSummaryAPI(Resource):
     @auth_required('token')
     @roles_required('admin')
-    @cache.cached(timeout=300)
+    # @cache.cached(timeout=300)
     def get(self):
         total_users = User.query.filter(User.roles.any(name='user')).count()
         total_lots = ParkingLot.query.count()
@@ -301,7 +301,7 @@ api.add_resource(ReservationAPI, "/api/reservations", "/api/reservations/<int:re
 
 class UserSummaryAPI(Resource):
     @auth_required('token')
-    @cache.cached(timeout=300)
+    # @cache.cached(timeout=300)
     def get(self):
         from collections import Counter
         usage = Counter()

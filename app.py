@@ -5,7 +5,7 @@ from application.resources import api
 from application.config import LocalDevelopmentConfig
 from flask_security import Security, SQLAlchemyUserDatastore 
 from werkzeug.security import generate_password_hash
-from application.celery_init import celery_init_app
+# from application.celery_init import celery_init_app
 from celery.schedules import crontab
 from application.task import monthly_reservation_report, daily_reminder
 from application.cache import cache
@@ -32,7 +32,7 @@ def create_app():
     return app
 
 app = create_app()
-celery = celery_init_app(app)
+# celery = celery_init_app(app)
 
 
 with app.app_context():
@@ -52,17 +52,17 @@ with app.app_context():
 from application.routes import *
 
 
-@celery.on_after_finalize.connect
-def setup_periodic_tasks(sender, **kwargs):
-    sender.add_periodic_task(
-        crontab(minute=0, hour=0, day_of_month=1),
-        # crontab(minute='*/1'),
-        monthly_reservation_report.s())
+# @celery.on_after_finalize.connect
+# def setup_periodic_tasks(sender, **kwargs):
+#     sender.add_periodic_task(
+#         crontab(minute=0, hour=0, day_of_month=1),
+#         # crontab(minute='*/1'),
+#         monthly_reservation_report.s())
 
-    sender.add_periodic_task(
-        crontab(hour=18, minute=0),
-        # crontab(minute='*/3'),
-        daily_reminder.s())
+#     sender.add_periodic_task(
+#         crontab(hour=18, minute=0),
+#         # crontab(minute='*/3'),
+#         daily_reminder.s())
 
 
 if __name__ == '__main__':
